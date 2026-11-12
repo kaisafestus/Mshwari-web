@@ -1,0 +1,8 @@
+{
+  "name": "Loan Boost — M-Shwari & Pochi Fuliza Limit Application",
+  "description": "Kenyan mobile finance application portal for M-Shwari, Pochi Fuliza, and Fuliza limit review, instant fee calculator, M-Pesa STK push processing, and status verification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
