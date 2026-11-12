@@ -90,9 +90,6 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
             </h4>
             <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1.5 text-xs">
               <span className="text-white/60 block">STK Gateway:</span>
-              <span className="font-mono text-base font-black text-[#42e46c] block">
-                UpesiPay Channel 270
-              </span>
               <span className="text-white/60 block text-[11px]">
                 Direct Safaricom STK Push & Server Verification
               </span>
