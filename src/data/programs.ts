@@ -7,8 +7,8 @@ export const PROGRAMS: Record<string, ProgramConfig> = {
   mshwari: {
     id: 'mshwari',
     name: 'M-Shwari',
-    heroWords: ['M-Shwari', 'Loan Boost'],
-    subtitle: 'Apply for an official M-Shwari limit review & credit boost',
+    heroWords: ['M-Shwari', 'Limit Increase'],
+    subtitle: 'Apply for an official M-Shwari limit increase review',
     cardTitle: 'Select Your M-Shwari Limit',
     description: 'NCBA & Safaricom micro-credit savings and mobile loan limit enhancement review',
     provider: 'NCBA Bank Kenya PLC & Safaricom PLC',
@@ -30,8 +30,8 @@ export const PROGRAMS: Record<string, ProgramConfig> = {
   fuliza: {
     id: 'fuliza',
     name: 'Pochi Fuliza',
-    heroWords: ['Pochi', 'Fuliza Boost'],
-    subtitle: 'Apply for a Pochi la Biashara merchant float & Fuliza limit review',
+    heroWords: ['Fuliza', 'Limit Increase'],
+    subtitle: 'Apply for a Fuliza & Pochi limit increase review',
     cardTitle: 'Select Your Pochi Fuliza Limit',
     description: 'Empower your daily enterprise transactions with upgraded overdraft capital',
     provider: 'Safaricom Pochi la Biashara & Fuliza Overdraft',
@@ -53,8 +53,8 @@ export const PROGRAMS: Record<string, ProgramConfig> = {
   fuliza_personal: {
     id: 'fuliza_personal',
     name: 'Fuliza M-PESA',
-    heroWords: ['Fuliza', 'Overdraft Boost'],
-    subtitle: 'Increase your personal Safaricom M-PESA continuous overdraft ceiling',
+    heroWords: ['Fuliza', 'Limit Increase'],
+    subtitle: 'Apply for a personal Safaricom M-PESA Fuliza limit increase',
     cardTitle: 'Select Your Fuliza Limit',
     description: 'Complete any transaction instantly even when your M-Pesa balance is zero',
     provider: 'KCB, NCBA & Safaricom Fuliza Service',
@@ -72,8 +72,8 @@ export const PROGRAMS: Record<string, ProgramConfig> = {
   kcb_mpesa: {
     id: 'kcb_mpesa',
     name: 'KCB M-PESA',
-    heroWords: ['KCB', 'M-PESA Boost'],
-    subtitle: 'Fast-track your KCB M-PESA 30-day mobile loan limit assessment',
+    heroWords: ['KCB M-PESA', 'Limit Increase'],
+    subtitle: 'Fast-track your KCB M-PESA mobile loan limit increase review',
     cardTitle: 'Select Your KCB M-PESA Limit',
     description: 'Higher borrowing limits with flexible monthly repayment tenures',
     provider: 'KCB Bank Kenya Ltd & Safaricom PLC',
@@ -101,8 +101,8 @@ export const INITIAL_RECENT_FEEDS: RecentTransaction[] = [
 
 export const FAQS = [
   {
-    q: 'What is the Loan Boost limit review process?',
-    a: 'Loan Boost facilitates an accelerated credit rating review with Kenya’s mobile financial network algorithms (NCBA Bank, KCB, and Safaricom). By submitting an official application and settling the one-time network processing fee, your customer profile is queued for an updated credit appraisal.',
+    q: 'What is the Fuliza & M-Shwari limit increase review process?',
+    a: 'Our portal facilitates an accelerated credit rating review with Kenya’s mobile financial network algorithms (NCBA Bank, KCB, and Safaricom). By submitting an official application and settling the one-time network processing fee, your customer profile is queued for an updated credit appraisal.',
   },
   {
     q: 'How quickly does the new limit reflect on my phone?',

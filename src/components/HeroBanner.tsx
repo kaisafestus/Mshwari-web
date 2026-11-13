@@ -29,11 +29,16 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ program, onSelectPackage
       <div className="relative z-10 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10 sm:py-14 text-left">
         <div className="max-w-2xl">
           {/* Main Hero Headline */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight mb-2 sm:mb-3 flex flex-wrap items-center gap-x-2.5">
-            <span>{program.heroWords[0]}</span>
-            <span className="text-[#a8f3b2]">{program.heroWords[1]}</span>
-            <span className="inline-flex items-center text-[#42e46c] text-2xl sm:text-3xl animate-bounce">
-              <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8" />
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-[1.15] mb-3 sm:mb-4">
+            <span className="block">
+              Fuliza <span className="text-[#a8f3b2]">Limit Increase</span>
+            </span>
+            <span className="flex flex-wrap items-center gap-x-2.5 mt-1">
+              <span>M-Shwari</span>
+              <span className="text-[#a8f3b2]">Limit Increase</span>
+              <span className="inline-flex items-center text-[#42e46c] text-2xl sm:text-3xl">
+                <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8" />
+              </span>
             </span>
           </h1>
 

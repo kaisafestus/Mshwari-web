@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
 
 dotenv.config();
@@ -17,6 +18,27 @@ const UPESIPAY_AUTH_HEADER =
   'Basic RTcyT0FNU25BbW5lXzMzVXhVUjc6OU83Y2FSbDUtcVgxbXg0QXNoR2o1YmhFY0JUVy1JTXVkTGdlMS1Xaw==';
 const UPESIPAY_CHANNEL_ID = parseInt(process.env.UPESIPAY_CHANNEL_ID || '270', 10);
 const UPESIPAY_BASE_URL = 'https://upesipay.com';
+const TOKEN_SECRET =
+  process.env.UPESIPAY_PASSWORD || '9O7caRl5-qX1mx4AshGj5bhEcBTW-IMudLge1-Wk';
+
+function createVerificationToken(payload: Record<string, unknown>): string {
+  const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', TOKEN_SECRET).update(encoded).digest('base64url');
+  return `${encoded}.${sig}`;
+}
+
+function verifyToken(token: string): Record<string, any> | null {
+  try {
+    const [encoded, sig] = token.split('.');
+    if (!encoded || !sig) return null;
+    const expectedSig = crypto.createHmac('sha256', TOKEN_SECRET).update(encoded).digest('base64url');
+    if (sig.length !== expectedSig.length) return null;
+    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) return null;
+    return JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8'));
+  } catch {
+    return null;
+  }
+}
 
 // Server-side in-memory transaction store for verified payments
 interface PaymentRecord {
@@ -94,7 +116,17 @@ app.post('/api/upesipay/stk-push', async (req: Request, res: Response): Promise<
       body: JSON.stringify(payload),
     });
 
-    const data: any = await upesiResponse.json();
+    const rawText = await upesiResponse.text();
+    let data: any = {};
+    try {
+      data = rawText ? JSON.parse(rawText) : {};
+    } catch {
+      res.status(502).json({
+        success: false,
+        message: 'Payment gateway returned an unexpected response.',
+      });
+      return;
+    }
 
     console.log('[UpesiPay] Initiation response:', upesiResponse.status, data);
 
@@ -112,6 +144,7 @@ app.post('/api/upesipay/stk-push', async (req: Request, res: Response): Promise<
       data.data?.checkout_request_id ||
       `ws_CO_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
     const merchantRequestId = data.data?.merchant_request_id || '';
+    const createdAt = Date.now();
 
     // Record transaction in server memory
     transactionsDb.set(checkoutRequestId, {
@@ -124,8 +157,19 @@ app.post('/api/upesipay/stk-push', async (req: Request, res: Response): Promise<
       program_name: program_name || 'M-Shwari',
       target_limit: Number(target_limit) || 10000,
       status: 'pending',
-      created_at: Date.now(),
-      updated_at: Date.now(),
+      created_at: createdAt,
+      updated_at: createdAt,
+    });
+
+    const verificationToken = createVerificationToken({
+      checkout_request_id: checkoutRequestId,
+      merchant_request_id: merchantRequestId,
+      phone_number: cleanPhone,
+      amount: parsedAmount,
+      program_id: program_id || 'mshwari',
+      program_name: program_name || 'M-Shwari',
+      target_limit: Number(target_limit) || 10000,
+      created_at: createdAt,
     });
 
     res.json({
@@ -135,6 +179,7 @@ app.post('/api/upesipay/stk-push', async (req: Request, res: Response): Promise<
       merchant_request_id: merchantRequestId,
       phone_number: cleanPhone,
       amount: parsedAmount,
+      verification_token: verificationToken,
     });
   } catch (error: any) {
     console.error('[UpesiPay] STK initiation error:', error);
@@ -203,7 +248,26 @@ app.post('/api/upesipay/callback', (req: Request, res: Response) => {
 app.get('/api/upesipay/status/:checkoutRequestId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { checkoutRequestId } = req.params;
-    const record = transactionsDb.get(checkoutRequestId);
+    const token = String(req.query?.token || '');
+    let record = transactionsDb.get(checkoutRequestId);
+
+    if (!record && token) {
+      const tokenData = verifyToken(token);
+      if (tokenData && tokenData.checkout_request_id === checkoutRequestId) {
+        record = {
+          checkout_request_id: tokenData.checkout_request_id,
+          merchant_request_id: tokenData.merchant_request_id,
+          phone_number: tokenData.phone_number,
+          amount: Number(tokenData.amount),
+          program_id: tokenData.program_id,
+          program_name: tokenData.program_name,
+          target_limit: Number(tokenData.target_limit),
+          status: 'pending',
+          created_at: Number(tokenData.created_at),
+          updated_at: Number(tokenData.created_at),
+        };
+      }
+    }
 
     if (!record) {
       res.status(404).json({
@@ -229,9 +293,9 @@ app.get('/api/upesipay/status/:checkoutRequestId', async (req: Request, res: Res
       return;
     }
 
-    // Check transaction age (timeout after 90 seconds)
+    // Check transaction age (timeout after 95 seconds)
     const elapsedSeconds = (Date.now() - record.created_at) / 1000;
-    if (elapsedSeconds > 90) {
+    if (elapsedSeconds > 95) {
       record.status = 'timeout';
       res.json({
         success: false,
@@ -243,7 +307,7 @@ app.get('/api/upesipay/status/:checkoutRequestId', async (req: Request, res: Res
 
     // Actively query UpesiPay's transaction ledger via API to check for confirmed deposit
     try {
-      const txnsResponse = await fetch(`${UPESIPAY_BASE_URL}/api/v2/transactions/?status=success&limit=10`, {
+      const txnsResponse = await fetch(`${UPESIPAY_BASE_URL}/api/v2/transactions/?limit=20`, {
         headers: {
           Authorization: UPESIPAY_AUTH_HEADER,
         },
@@ -252,30 +316,50 @@ app.get('/api/upesipay/status/:checkoutRequestId', async (req: Request, res: Res
       if (txnsResponse.ok) {
         const txnsData: any = await txnsResponse.json();
         if (txnsData.success && Array.isArray(txnsData.data)) {
-          // Look for matching phone number and amount within the creation timeframe
+          const minCreatedAt = record.created_at - 60_000;
           const matchedTxn = txnsData.data.find((t: any) => {
-            const phoneMatch = String(t.phone_number).includes(record.phone_number.slice(-8));
-            const amtMatch = Math.abs(Number(t.amount) - record.amount) < 1;
-            return phoneMatch && amtMatch;
+            const idMatch =
+              t.id === checkoutRequestId ||
+              t.checkout_request_id === checkoutRequestId ||
+              (record!.merchant_request_id && t.merchant_request_id === record!.merchant_request_id);
+            const phoneMatch = String(t.phone_number || '').includes(record!.phone_number.slice(-9));
+            const amtMatch = Math.abs(Number(t.amount) - record!.amount) < 1;
+            const txnTime = t.created_at ? new Date(t.created_at).getTime() : Date.now();
+            return idMatch || (phoneMatch && amtMatch && txnTime >= minCreatedAt);
           });
 
           if (matchedTxn) {
-            console.log('[UpesiPay] Server verified payment in ledger:', matchedTxn);
-            record.status = 'success';
-            record.mpesa_code = matchedTxn.id || `QA${Math.floor(100000 + Math.random() * 900000)}X9`;
-            record.updated_at = Date.now();
+            const st = String(matchedTxn.status || '').toLowerCase();
+            if (st === 'success' || st === 'completed') {
+              console.log('[UpesiPay] Server verified payment in ledger:', matchedTxn);
+              record.status = 'success';
+              record.mpesa_code =
+                matchedTxn.mpesa_code ||
+                matchedTxn.id ||
+                `QA${Math.floor(100000 + Math.random() * 900000)}X9`;
+              record.updated_at = Date.now();
 
-            res.json({
-              success: true,
-              status: 'success',
-              phone_number: record.phone_number,
-              amount: record.amount,
-              target_limit: record.target_limit,
-              program_name: record.program_name,
-              mpesa_code: record.mpesa_code,
-              verified_at: record.updated_at,
-            });
-            return;
+              res.json({
+                success: true,
+                status: 'success',
+                phone_number: record.phone_number,
+                amount: record.amount,
+                target_limit: record.target_limit,
+                program_name: record.program_name,
+                mpesa_code: record.mpesa_code,
+                verified_at: record.updated_at,
+              });
+              return;
+            }
+            if (st === 'failed' || st === 'cancelled' || st === 'timeout') {
+              record.status = 'failed';
+              res.json({
+                success: false,
+                status: st,
+                message: 'The M-PESA STK prompt was cancelled or declined.',
+              });
+              return;
+            }
           }
         }
       }

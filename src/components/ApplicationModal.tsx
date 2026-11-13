@@ -154,19 +154,30 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
         }),
       });
 
-      const data = await res.json();
+      const rawText = await res.text();
+      let data: any = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        throw new Error(
+          res.status === 404
+            ? 'Payment service endpoint unavailable (404). Please redeploy the API functions.'
+            : `Unexpected server response (${res.status}). Please try again.`
+        );
+      }
 
       if (!res.ok || !data.success) {
         throw new Error(data.message || 'Failed to dispatch M-PESA STK Push.');
       }
 
       const activeCheckoutId = data.checkout_request_id;
+      const verificationToken = data.verification_token || '';
       setCheckoutRequestId(activeCheckoutId);
       setStep('STK_WAIT');
       setCountdown(75);
 
       // Start automatic server-side polling verification
-      startServerStatusPolling(activeCheckoutId);
+      startServerStatusPolling(activeCheckoutId, verificationToken);
     } catch (err: any) {
       console.error('STK Initiation failure:', err);
       setErrorMessage(err.message || 'Could not reach payment gateway. Please check connection and retry.');
@@ -179,17 +190,24 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
    * AUTOMATIC SERVER-SIDE VERIFICATION POLLING
    * No user self-confirmation allowed! Only server verifies and marks it paid.
    */
-  const startServerStatusPolling = (reqId: string) => {
+  const startServerStatusPolling = (reqId: string, token?: string) => {
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
     }
 
     pollingRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`/api/upesipay/status/${encodeURIComponent(reqId)}`);
+        const query = token ? `?token=${encodeURIComponent(token)}` : '';
+        const res = await fetch(`/api/upesipay/status/${encodeURIComponent(reqId)}${query}`);
         if (!res.ok) return;
 
-        const result = await res.json();
+        const rawText = await res.text();
+        let result: any = {};
+        try {
+          result = rawText ? JSON.parse(rawText) : {};
+        } catch {
+          return;
+        }
 
         if (result.status === 'success') {
           // PAYMENT OFFICIALLY VERIFIED BY SERVER & GATEWAY
@@ -245,7 +263,7 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
   };
 
   const handleCopyReceipt = () => {
-    const text = `LoanBoost Kenya Application Receipt\nProgram: ${program.name}\nTarget Limit: Ksh ${selectedLimit.amount.toLocaleString()}\nProcessing Fee: Ksh ${selectedLimit.fee.toLocaleString()}\nM-PESA Code: ${mpesaReceiptCode}\nID: ••••${idNumber.slice(-3)}\nPhone: +254${phoneNumber}\nStatus: Verified & Queued for Network Sync`;
+    const text = `Limit Increase Application Receipt\nProgram: ${program.name}\nTarget Limit: Ksh ${selectedLimit.amount.toLocaleString()}\nProcessing Fee: Ksh ${selectedLimit.fee.toLocaleString()}\nM-PESA Code: ${mpesaReceiptCode}\nID: ••••${idNumber.slice(-3)}\nPhone: +254${phoneNumber}\nStatus: Verified & Queued for Network Sync`;
     navigator.clipboard.writeText(text);
     setReceiptCopied(true);
     setTimeout(() => setReceiptCopied(false), 2000);

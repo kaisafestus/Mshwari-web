@@ -17,7 +17,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
                 🇰🇪
               </span>
               <span>
-                LoanBoost<span className="text-[#42e46c]">Kenya</span>
+                Fuliza &amp; <span className="text-[#42e46c]">M-Shwari</span>
               </span>
             </div>
             <p className="text-white/70 max-w-md text-xs leading-relaxed">
@@ -104,10 +104,10 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
         {/* Regulatory Disclosure */}
         <div className="text-[11px] text-white/50 space-y-2 leading-relaxed">
           <p>
-            <strong>Regulatory & Consumer Disclosure:</strong> LoanBoost operates as an independent credit advisory and limit evaluation facilitation gateway. All micro-lending decisions, loan balances, interest rates, and actual disbursement tenures are subject to underwriting rules established by partner banking institutions (NCBA Bank Kenya PLC and KCB Bank Group) in conjunction with Safaricom PLC. Payment of application processing fees supports network prioritization and does not guarantee limit increments where customer credit history fails statutory CRB assessment.
+            <strong>Regulatory & Consumer Disclosure:</strong> This portal operates as an independent credit advisory and limit evaluation facilitation gateway. All micro-lending decisions, loan balances, interest rates, and actual disbursement tenures are subject to underwriting rules established by partner banking institutions (NCBA Bank Kenya PLC and KCB Bank Group) in conjunction with Safaricom PLC. Payment of application processing fees supports network prioritization and does not guarantee limit increments where customer credit history fails statutory CRB assessment.
           </p>
           <div className="flex flex-wrap justify-between items-center pt-4 border-t border-white/10 text-white/40">
-            <div>© {new Date().getFullYear()} LoanBoost Kenya. All rights reserved.</div>
+            <div>© {new Date().getFullYear()} Fuliza &amp; M-Shwari Limit Increase. All rights reserved.</div>
             <div className="flex gap-4">
               <span>Privacy Policy</span>
               <span>Terms of Service</span>

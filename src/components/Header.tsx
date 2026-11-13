@@ -28,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
             <ShieldCheck className="w-5 h-5" />
           </span>
           <span>
-            LoanBoost<span className="text-[#078a1f]">Kenya</span>
+            Fuliza &amp; <span className="text-[#078a1f]">M-Shwari</span>
           </span>
         </a>
 
