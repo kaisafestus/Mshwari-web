@@ -51,8 +51,8 @@ export const ProgramSelector: React.FC<ProgramSelectorProps> = ({
               </span>
             </div>
             <p className={`text-xs leading-snug ${isSelected ? 'text-[#078a1f] font-semibold' : 'text-slate-500'}`}>
-              {prog.id === 'mshwari' && 'Boost M-Shwari savings & loan limit'}
-              {prog.id === 'fuliza' && 'Boost Pochi la Biashara merchant float'}
+              {prog.id === 'mshwari' && 'Boost M-Shwari savings & limit boost'}
+              {prog.id === 'fuliza' && 'fuliza limit increase'}
               {prog.id === 'fuliza_personal' && 'Continuous personal overdraft limit'}
               {prog.id === 'kcb_mpesa' && 'Higher borrowing 30-day tenor'}
             </p>
